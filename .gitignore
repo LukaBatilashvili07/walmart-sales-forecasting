@@ -1,0 +1,24 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# OS/editor junk
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Test/cache outputs
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Model/artifact outputs
+models/
+artifacts/
+checkpoints/
+*.pt
+*.pth
+*.pkl
+*.joblib
