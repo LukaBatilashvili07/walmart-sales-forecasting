@@ -134,11 +134,6 @@ MLflow ექსპერიმენტი: `Prophet_Training`. Prophet-ს დ
 
 `notebooks/model_inference.ipynb` კითხულობს ყველა არქიტექტურის საბოლოო validation WMAE-ს MLflow-დან, ირჩევს საუკეთესოს და აგენერირებს submission-ს.
 
-```
-Using best AVAILABLE model: XGBoost (Walmart_XGBoost_Pipeline v2)
-NOTE: DLinear scored better but has no registered full-history pipeline yet.
-```
-
 **საბოლოო submission** - `Walmart_XGBoost_Pipeline` v2 (`XGBoost_Final_Refit`-ში დატრენინგებული მთელ 421,570 მწკრივზე), რომელიც პირდაპირ იტვირთება Model Registry-დან და გაშვებულია დაუმუშავებელ (raw, `test.csv`) მონაცემზე - pipeline-ი შიგნით თავად ასრულებს `WalmartBasePreprocessor` - `WalmartTabularFeatureEngineer` - `predict()` ჯაჭვს.
 
 - `submission.csv`: 115,064 მწკრივი, ფორმატი `{Store}_{Dept}_{Date}, Weekly_Sales`

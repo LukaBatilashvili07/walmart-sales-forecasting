@@ -24,3 +24,5 @@ checkpoints/
 *.joblib
 
 *.parquet
+
+_feature_importance*.csv
