@@ -22,3 +22,5 @@ checkpoints/
 *.pth
 *.pkl
 *.joblib
+
+*.parquet
