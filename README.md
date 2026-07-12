@@ -149,6 +149,8 @@ NOTE: DLinear scored better but has no registered full-history pipeline yet.
 
 ## 7. MLflow / DagsHub სტრუქტურა
 
+https://dagshub.com/LukaBatilashvili07/walmart-sales-forecasting.mlflow
+
 ყველა მოდელის არქიტექტურას აქვს ცალკე MLflow ექსპერიმენტი, შიგნით კი run-ების სახელები:
 
 ```
