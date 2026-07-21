@@ -1,1 +1,7 @@
-from .window_dataset import WalmartTrainingWindowDataset, WalmartForecastWindowDataset
+from .window_dataset import (
+    WalmartTrainingWindowDataset,
+    WalmartForecastWindowDataset,
+    WalmartPrecomputedTrainingWindowDataset,
+    WalmartPrecomputedForecastWindowDataset,
+    FastTensorDataLoader,
+)
