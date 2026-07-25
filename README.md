@@ -269,15 +269,6 @@ Target scaling ითვლება მხოლოდ training history-ზე.
 
 Sequence dataset-ები წინასწარ ინახება tensor-ებად (`WalmartPrecomputedTrainingWindowDataset`, `WalmartPrecomputedForecastWindowDataset`), რაც მნიშვნელოვნად აჩქარებს neural მოდელების training-ს.
 
-### 3.4 Extra Fallbacks (Statistical model)
-
-Fallback იერარქია (ARIMA-ში):
-
-1. Store-Dept ბოლო 13 კვირის საშუალო
-2. Dept ბოლო 13 კვირის საშუალო
-3. Store ბოლო 13 კვირის საშუალო
-4. global ბოლო 13 კვირის საშუალო
-
 ---
 
 ## 4. მოდელის არქიტექტურები
@@ -386,9 +377,12 @@ TFT-ის მთავარი იდეა იყო, რომ Store/Dept-�
 
 საუკეთესო final submission-ის last-39 split score ≈ **2224**, calendar-aligned split score ≈ **3457**.
 
-| მოდელი | კონფიგურაცია | Kaggle Public | Kaggle Private |
-|---|---|---:|---:|
-| TFT | `hidden=64, embedding=8, dropout=0.3, loss=Huber, epochs=13` | **3041.21** | **3156.09** |
+| მიდგომა | აღწერა | შედეგი |
+|---|---|---:|
+| TFT baseline | Temporal Fusion Transformer static categorical embeddings-ით და known future covariates-ით | validation-ზე ძლიერი deep baseline |
+| Last-39 tuning | hidden size, embedding size, dropout, loss და epoch-ების შერჩევა last-39 split-ზე | საუკეთესო კონფიგურაციები shortlist-ში მოხვდა |
+| Calendar-aligned check | test-სეზონთან უფრო ახლო validation-ზე კონფიგურაციების გადამოწმება | final config შეირჩა generalization-ის მიხედვით |
+| Final TFT submission | `hidden=64, embedding=8, dropout=0.3, Huber, epochs=13` | Kaggle Public = **3041.21**, Private = **3156.09** |
 
 **დასკვნა:** TFT-მ მნიშვნელოვნად აჯობა DLinear-ს და N-BEATS-ს Kaggle test-ზე. ეს აჩვენებს, რომ static identifiers და known future covariates რეალურად სასარგებლოა Walmart-ის Store-Dept forecasting ამოცანაში.
 
@@ -407,9 +401,14 @@ PatchTST იყო საუკეთესო standalone deep learning მო�
 
 საუკეთესო final submission-ის last-39 split score ≈ **2238**, calendar-aligned split score ≈ **3411**.
 
-| მოდელი | კონფიგურაცია | Kaggle Public | Kaggle Private |
-|---|---|---:|---:|
-| PatchTST-X | `patch_length=8, stride=8, d_model=64, layers=2, exog_hidden=64, dropout=0.1, loss=Huber, epochs=19` | **2966.15** | **3026.98** |
+| მიდგომა | აღწერა | შედეგი |
+|---|---|---:|
+| PatchTST target-only | Patch-based Transformer მხოლოდ target history-ზე | ძლიერი neural baseline |
+| PatchTST-X | PatchTST backbone + static/covariate correction head | საუკეთესო standalone deep model |
+| Last-39 tuning | patch length, stride, d_model, layers, dropout და loss-ის შერჩევა | საუკეთესო validation ≈ **2238** |
+| Calendar-aligned check | test-სეზონთან მიმსგავსებულ split-ზე generalization-ის შემოწმება | final selection-ში გამოყენებული |
+| Final PatchTST-X submission | `patch_length=8, stride=8, d_model=64, layers=2, exog_hidden=64, dropout=0.1, Huber, epochs=19` | Kaggle Public = **2966.15**, Private = **3026.98** |
+| PatchTST-X + TFT + ARIMA blend | საუკეთესო standalone PatchTST-X-ს დაემატა TFT და ARIMA მცირე წონებით | Kaggle Public = **2899.13**, Private = **2980.10** |
 
 **დასკვნა:** PatchTST-X გახდა საუკეთესო standalone მოდელი. TFT-სთან შედარებით PatchTST-X უკეთ განზოგადდება test set-ზე, განსაკუთრებით Private score-ზე. სავარაუდო მიზეზია patch-based representation, რომელიც კარგად იჭერს წლიურ/სეზონურ pattern-ებს მოკლე Store-Dept სერიებში.
 
@@ -471,11 +470,20 @@ Fallback strategy:
 
 Last-39 validation-ზე საუკეთესო order აღმოჩნდა `ARIMA(1,0,0)`:
 
+| მიდგომა | აღწერა | შედეგი |
+|---|---|---:|
+| ARIMA(0,1,0) | random walk baseline differencing-ით | Validation WMAE = **3225.11** |
+| ARIMA(1,0,0) | AR(1), differencing-ის გარეშე | Validation WMAE = **2588.45** |
+| ARIMA(1,1,1) | მცირე სრული ARIMA მოდელი | Validation WMAE = **2743.46** |
+| Calendar check | საუკეთესო order-ების გადამოწმება calendar-aligned split-ზე | stability check |
+| Final ARIMA submission | full train history-ზე `ARIMA(1,0,0)` თითო Store-Dept სერიისთვის | standalone test submission |
+| Fallback strategy | failed/short/unseen სერიებისთვის hierarchical recent mean | 11 test-only Store-Dept წყვილი დამუშავდა fallback-ით |
+
 | Order | Validation WMAE | Kaggle Public | Kaggle Private |
 |---|---:|
-| `ARIMA(1,0,0)` | **2588.45** | **5030.89** | 4796.84 |
+| `ARIMA(1,0,0)` | **2588.45** | **5030.89** | **4796.84** |
 
-**დასკვნა:** `ARIMA(1,0,0)`-ის მოგება ლოგიკურია ამ მონაცემებისთვის. Walmart Store-Dept სერიები ხშირად უფრო level-stationary/noisy სერიებია, ვიდრე მკაფიო trend-ის მქონე სერიები. Differencing (`d=1`) ზოგჯერ აშორებს სასარგებლო sales level ინფორმაციას და პროგნოზს უფრო არასტაბილურს ხდის. AR(1) კი ინარჩუნებს გაყიდვების დონეს და მოქმედებს როგორც მარტივი mean-reverting baseline.
+**დასკვნა:** Walmart Store-Dept სერიები ხშირად უფრო level-stationary/noisy სერიებია, ვიდრე მკაფიო trend-ის მქონე სერიები. Differencing (`d=1`) ზოგჯერ აშორებს სასარგებლო sales level ინფორმაციას და პროგნოზს უფრო არასტაბილურს ხდის. AR(1) კი ინარჩუნებს გაყიდვების დონეს და მოქმედებს როგორც მარტივი mean-reverting baseline.
 
 მიუხედავად ძლიერი validation შედეგისა, ARIMA-ს მნიშვნელოვანი შეზღუდვაა ის, რომ თითოეული Store-Dept სერია დამოუკიდებლად მოდელდება და არ ხდება ინფორმაციის გაზიარება მაღაზიებსა და დეპარტამენტებს შორის. ასევე მოდელი პირდაპირ ვერ იყენებს holiday, MarkDown, Store Type და სხვა known future covariates-ს.
 
@@ -526,7 +534,7 @@ Classical მოდელებიდან ყველაზე პრაქ�
 
 ### 5.2 Aggregated classical models
 
-| მოდელი | დონე | WMAE | შედარებადობა |
+| მოდელი | დონე | WMAE |
 |---|---|---:|---|
 | SARIMA | Aggregated weekly sales | **1,204,244.21** |
 | Prophet | Aggregated weekly sales | **1,728,319.66** |
