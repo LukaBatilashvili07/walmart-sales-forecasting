@@ -75,6 +75,8 @@ class WalmartTrainingWindowDataset(Dataset):
             if len(group) < total_length:
                 continue
 
+            dates_arr = group["Date"].to_numpy()
+
             target_values = pd.to_numeric(
                 group[self.target_col],
                 errors="coerce",
@@ -116,6 +118,12 @@ class WalmartTrainingWindowDataset(Dataset):
             for start in range(0, len(group) - total_length + 1):
                 context_end = start + self.context_length
                 pred_end = context_end + self.prediction_length
+
+                window_dates = dates_arr[start:pred_end]
+                deltas = np.diff(window_dates).astype("timedelta64[D]").astype(int)
+
+                if not np.all(deltas == 7):
+                    continue
 
                 if self.drop_nan_targets:
                     target_window = target_values[start:pred_end]
@@ -256,6 +264,8 @@ class WalmartPrecomputedTrainingWindowDataset:
             if len(group) < total_length:
                 continue
 
+            dates_arr = group["Date"].to_numpy()
+            
             target_values = pd.to_numeric(
                 group[self.target_col],
                 errors="coerce",
@@ -284,6 +294,12 @@ class WalmartPrecomputedTrainingWindowDataset:
             for start in range(0, len(group) - total_length + 1):
                 context_end = start + self.context_length
                 pred_end = context_end + self.prediction_length
+
+                window_dates = dates_arr[start:pred_end]
+                deltas = np.diff(window_dates).astype("timedelta64[D]").astype(int)
+
+                if not np.all(deltas == 7):
+                    continue
 
                 target_window = target_values[start:pred_end]
 
